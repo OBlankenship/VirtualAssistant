@@ -1,6 +1,7 @@
 import pyttsx3
 import speech_recognition as sr
-
+import requests
+import regex as re
 
 # ENGINE INITIALIZATION
 engine = pyttsx3.init('sapi5')
@@ -39,6 +40,8 @@ def change_name():
 def weather_control():
     global zip_code
     global weather_consent
+    # Hardcoded consent for testing
+    #weather_consent = True
     # Prompts for consent the first time the subroutine is run
     if weather_consent is False:
         engine.say("To give you the weather, I must transmit your ZIP code over the network is this ok?")
@@ -53,11 +56,16 @@ def weather_control():
         engine.say("What is your zip code?")
         engine.runAndWait()
         zip_code = get_input()
-    # Calls weather API and reads weather data
-    engine.say("The current weather is")
+    # Calls weather API
+    print(zip_code)
+    r = requests.post('http://api.weatherapi.com/v1/current.json?key=8b6ffde88fcb4665a6565825222802&q='+zip_code+'&aqi=no')
+    temp = (r.json()['current']['temp_f'])
+    condition = (r.json()['current']['condition']['text'])
+    # Reads weather data
+    engine.say("The weather is currently " + condition + " and the temperature is " + str(temp) + " degrees fahrenheit.")
     engine.runAndWait()
 
-    # TODO - Call weather service here
+
 
 
 def timer_control():
@@ -142,7 +150,7 @@ def music_control():
 def run_engine():
     global name
     while True:
-
+        #user_input = input()
         user_input = get_input().lower()
         print(user_input)
 
@@ -197,8 +205,19 @@ def run_engine():
             engine.runAndWait()
 
             query = get_input()
+            #query = input()
+            r = requests.post('https://cs361-wiki-scraper.herokuapp.com/search', json={"query": query})
 
-            # TODO - Call Wiki Scraper service
+
+            # Paragraph parsing using regex from Stack Overflow
+            sentences = re.split('(?<=[\.\?\!])\s*', r.json()['summary'])
+
+            # Testing code to display the search result
+            print(sentences[0])
+
+            # Reads the search result to the user
+            engine.say(sentences[0])
+            engine.runAndWait()
 
 
         else:
